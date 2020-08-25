@@ -1,0 +1,15 @@
+.dub
+docs.json
+__dummy.html
+docs/
+/chip8d
+chip8d.so
+chip8d.dylib
+chip8d.dll
+chip8d.a
+chip8d.lib
+chip8d-test-*
+*.exe
+*.o
+*.obj
+*.lst

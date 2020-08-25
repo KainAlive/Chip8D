@@ -1,0 +1,9 @@
+{
+	"authors": [
+		"Simon"
+	],
+	"copyright": "Copyright © 2020, Simon",
+	"description": "Chip8 Emulator in D",
+	"license": "proprietary",
+	"name": "chip8d"
+}
