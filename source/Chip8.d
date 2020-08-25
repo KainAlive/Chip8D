@@ -59,6 +59,7 @@ class Chip8 {
         
         // Decode opcodes
         // The & just keeps the bit at F and sets the rest to 000 so we can decode it
+        writefln("0x%X", this.opcode & 0xF000);
         switch(this.opcode & 0xF000) {
             // Execute opcodes
             // We are only checking for the first bit (f.e the A in 0xA000) because it is the instruction
@@ -75,27 +76,37 @@ class Chip8 {
                         // TODO when implementing jumps etc.
                         break;
                     }
-                    // 0XAB4 adds the value of V[0xA] to V[0xB]. V[0xF] is set to 1 when there is a carry and to 0 when there is no carry 
+                    // 0xNAB4 adds the value of V[0xA] to V[0xB]. V[0xF] is set to 1 when there is a carry and to 0 when there is no carry 
                     case 0x0004: {
-                        if(V[(opcode & 0x00F0) >> 4] > (0xFF - V[(this.opcode & 0x0F00) >> 8])) {
-                            V[0xF] = 1; //setting the carry
+                        if(this.V[(this.opcode & 0x00F0) >> 4] > (0xFF - this.V[(this.opcode & 0x0F00) >> 8])) {
+                            this.V[0xF] = 1; //setting the carry
                         } else {
-                            V[0xF] = 0;
+                            this.V[0xF] = 0;
                         }
+                        this.V[(this.opcode & 0x0F00) >> 8] += this.V[(this.opcode & 0x00F0) >> 4];
+                        this.pc += 2;
+                        break;
+                    }
+                    // 0xFN33 stores the binary representation of V[0xN] at addresses I, I + 1 and I + 2
+                    case 0x0033: {
+                        this.memory[this.I] = this.V[(opcode & 0x0F00) >> 8] / 100;
+                        this.memory[this.I + 1] = (this.V[(this.opcode & 0x0F00) >> 8] / 10) % 10;
+                        this.memory[this.I + 2] = (this.V[(this.opcode & 0x0F00) >> 8] % 100) & 10;
+                        this.pc += 2;
                         break;
                     }
                     default: {
-                        writefln("Unknown opcode [0x0000]: 0x%x", this.opcode);
+                        writefln("Unknown opcode [0x0000]: 0x%X", this.opcode);
                     }
                 }
                 break;
             }
-            // 0xAXXX sets I to the Address in XXX
+            // 0xANNN sets I to the Address in NNN
             case 0xA000: {
                 writeln("Adding to register...");
                 break;
             }
-            // 0x2XXX jumps to the address of XXX -> we need to keep track of the pc in the stack because of the return
+            // 0x2NNN jumps to the address of NNN -> we need to keep track of the pc in the stack because of the return
             case 0x2000: {
                 this.stack[sp] = pc;
                 ++this.sp;
