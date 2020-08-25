@@ -8,7 +8,7 @@ class Chip8 {
     private ushort opcode;
 
     // Memory (4K)
-    private char[4096] memory;
+    char[4096] memory;
 
     // CPU registers named V0 - VE | VF is used as ...
     private char[16] V;
@@ -35,8 +35,8 @@ class Chip8 {
     // Initialize the system
     void initialize() {
         
-        // Initializing the emulator by setting all pointers (and the opcode) to 0
-        this.pc = 0;
+        // Initializing the emulator by setting all pointers (and the opcode) to 0 | Useable memory begins at 0x200
+        this.pc = 0x200;
         this.opcode = 0;
         this.I = 0;
         this.sp = 0;
@@ -59,7 +59,7 @@ class Chip8 {
         
         // Decode opcodes
         // The & just keeps the bit at F and sets the rest to 000 so we can decode it
-        writefln("0x%X", this.opcode & 0xF000);
+        //writefln("0x%X", this.opcode & 0xF000);
         switch(this.opcode & 0xF000) {
             // Execute opcodes
             // We are only checking for the first bit (f.e the A in 0xA000) because it is the instruction
