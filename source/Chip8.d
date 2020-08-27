@@ -32,8 +32,14 @@ class Chip8 {
     private short[16] stack;
     private short sp;
 
-    // Store the current key state (keypad input)
-    private char[16] key;
+    // Maps the input (int) to the key map
+    private short[16] keyMap = [
+                                120, 1, 2, 3,           //"x", "1", "2", "3",
+                                112, 119, 101, 7,      //"q", "w", "e", "a",
+                                115, 100, 122, 99,      //"s", "d", "z", "c",
+                                4, 3, 102, 118          //"4", "3", "f", "v"
+                                ]; 
+    private int key;
 
     // Random number generator
     auto rnd = Random(42);
@@ -73,7 +79,7 @@ class Chip8 {
 
         // Loading the program into memory
         // Useable memory begins at 0x200 (512)
-        File ROM = File("PONG", "r");
+        File ROM = File("MISSILE", "r");
         char[] buffer = ROM.rawRead(new char[ROM.size()]);
         ROM.close();
         const bufferSize = buffer.length;
@@ -111,8 +117,16 @@ class Chip8 {
             //writef("\rPC: %s | OPCODE: 0x%X", this.pc, this.opcode & 0xFFFF);
             writef("\r%s", this.stack);
 
-            //DrawText(cast(char*)format("0x%X", this.opcode), 25, 25, 12, Colors.RAYWHITE);
-            //DrawText(cast(char*)format("%X", this.pc), 25, 45, 12, Colors.RAYWHITE);
+            // Loops through the whole key map and checks if the pressed key matches with the position in the map. If so, the key becomes the position
+            int pressedKey = GetKeyPressed();
+            for (int i = 0; i < this.keyMap.length; i++) {
+                if (this.keyMap[i] == pressedKey) {
+                    this.key = i;
+                } 
+            }
+
+            //DrawText(cast(char*)format("0x%X", this.opcode), 25, 25, 20, Colors.RAYWHITE);
+            //DrawText(cast(char*)format("%s", this.pc), 25, 45, 20, Colors.RAYWHITE);
 
             // Decode opcodes
             // The & just keeps the bit at F and sets the rest to 000 so we can decode it
@@ -335,7 +349,7 @@ class Chip8 {
                     this.drawFlag = true;
                     this.pc += 2;
                     break;
-                }
+                                    }
 
                 // 0xE handels some Keyboard input but requires additional checks
                 case 0xE000: {
@@ -343,16 +357,24 @@ class Chip8 {
                         // 0xEX9E skips the next instruction when the key saved in V[X] is pressed
                         case 0xE09E: {
                             // TODO when implememting keyboard...
-                            writeln("Keyboard 1");
-                            this.pc += 2;
+                            if (this.V[(this.opcode & 0x0F00) >> 8] == this.key) {
+                                this.pc += 4;
+                            } else {
+                                this.pc += 2;
+                            }
+                            this.key = -1;
                             break;
                         }
 
                         // 0xEXA1 skips the next instruction when the key saved in V[X] is not pressed
                         case 0xE0A1: {
                             // TODO when implememting keyboard...
-                            writeln("Keyboard 2");
-                            this.pc += 2;
+                            if (this.V[(this.opcode & 0x0F00) >> 8] == this.key) {
+                                this.pc += 2;
+                            } else {
+                                this.pc += 4;
+                            }
+                            this.key = -1;
                             break;
                         }
                         default: {
@@ -374,7 +396,7 @@ class Chip8 {
                         // 0xFX0A is waiting for a keypress and stores it in V[X]
                         case 0x000A: {
                             // TODO when implementing keyboard
-                            writeln("Keyboard 3");
+                            this.V[(this.opcode & 0x0F00) >> 8] = cast(char)this.key;
                             this.pc += 2;
                             break;
                         }
