@@ -2,6 +2,7 @@ module Chip8;
 
 import std.stdio;
 import std.random : uniform, Random;
+import std.path;
 
 // Emulator Class
 class Chip8 {
@@ -47,7 +48,7 @@ class Chip8 {
 
         // Loading the program into memory
         // Useable memory begins at 0x200 (512)
-        File ROM = File("test_opcode.ch8", "r");
+        File ROM = File("UFO", "r");
         char[] buffer = ROM.rawRead(new char[ROM.size()]);
         ROM.close();
         const bufferSize = buffer.length;
@@ -60,31 +61,29 @@ class Chip8 {
     void emulateCycle() {
         // Fetch opcodes
         this.opcode = this.memory[this.pc] << 8 | this.memory[this.pc + 1];
-        
-        //writefln("LUL: 0x%X", (this.opcode & 0x0F00) >> 8);
+        writef("\rPC: %s | OPCODE: 0x%X", this.pc, this.opcode & 0xFFFF);
 
         // Decode opcodes
         // The & just keeps the bit at F and sets the rest to 000 so we can decode it
         switch(this.opcode & 0xF000) {
             // Execute opcodes
-            // We are only checking for the first bit (f.e the A in 0xA000) because it is the instruction
             case 0x0000: {
-                // If the first bit is 0, we have to do additional checks (f.e 0x00E0 or 0c00EE)
-                switch(this.opcode & 0x000F) {
+                switch (this.opcode & 0xF0FF) {
                     // 0x0000 clears the screen
                     case 0x0000: {
                         // TODO when implementing graphics
+                        writeln("Clear screen");
+                        this.pc += 2;
                         break;
                     }
 
-                    // 0x000E return from a subroutine
-                    case 0x000E: {
-                        // TODO when implementing jumps etc.
+                    // 0x00EE returns from subroutine
+                    case 0x00EE: {
+                        this.pc = this.stack[--this.sp];
                         break;
                     }
-
                     default: {
-                        writefln("Unknown opcode [0x0000]: 0x%X", this.opcode);
+                        break;
                     }
                 }
                 break;
@@ -250,6 +249,7 @@ class Chip8 {
             // 0xANNN sets I to the Address in NNN
             case 0xA000: {
                 this.I = this.opcode & 0x0FFF;
+                this.pc += 2;
                 break;
             }
 
@@ -270,23 +270,26 @@ class Chip8 {
             // 0xDXYN draws a sprite at (V[X] , V[Y]) ...
             case 0xD000: {
                 // TODO when implementing gfx
+                //writeln("Draw Sprite");
                 this.pc += 2;
                 break;
             }
 
             // 0xE handels some Keyboard input but requires additional checks
             case 0xE000: {
-                switch (this.opcode & 0x00FF) {
+                switch (this.opcode & 0xF0FF) {
                     // 0xEX9E skips the next instruction when the key saved in V[X] is pressed
-                    case 0x009E: {
+                    case 0xE09E: {
                         // TODO when implememting keyboard...
+                        writeln("Keyboard 1");
                         this.pc += 2;
                         break;
                     }
 
                     // 0xEXA1 skips the next instruction when the key saved in V[X] is not pressed
-                    case 0x00A1: {
+                    case 0xE0A1: {
                         // TODO when implememting keyboard...
+                        writeln("Keyboard 2");
                         this.pc += 2;
                         break;
                     }
@@ -309,6 +312,7 @@ class Chip8 {
                     // 0xFX0A is waiting for a keypress and stores it in V[X]
                     case 0x000A: {
                         // TODO when implementing keyboard
+                        writeln("Keyboard 3");
                         this.pc += 2;
                         break;
                     }
@@ -337,6 +341,7 @@ class Chip8 {
                     //0xFX29 sets I to the location of the sprite for the character in V[X]
                     case 0x0029: {
                         // TODO when implementing gfx
+                        //writeln("Set location for char");
                         this.pc += 2;
                         break;
                     }

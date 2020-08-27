@@ -3,6 +3,10 @@
 		"Simon"
 	],
 	"copyright": "Copyright © 2020, Simon",
+	"dependencies": {
+		"raylib-d": "~>3.0.3"
+	},
+	"libs": ["raylib"],
 	"description": "Chip8 Emulator in D",
 	"license": "proprietary",
 	"name": "chip8d"
