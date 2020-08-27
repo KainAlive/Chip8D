@@ -34,10 +34,10 @@ class Chip8 {
 
     // Maps the input (int) to the key map
     private short[16] keyMap = [
-                                120, 1, 2, 3,           //"x", "1", "2", "3",
-                                112, 119, 101, 7,      //"q", "w", "e", "a",
-                                115, 100, 122, 99,      //"s", "d", "z", "c",
-                                4, 3, 102, 118          //"4", "3", "f", "v"
+                                120, 49, 50, 51,        //"x", "1", "2", "3",
+                                113, 119, 101, 97,       //"q", "w", "e", "a",
+                                115, 100, 121, 99,      //"s", "d", "y", "c",
+                                52, 114, 102, 118       //"4", "r", "f", "v"
                                 ]; 
     private int key;
 
@@ -49,22 +49,22 @@ class Chip8 {
 
     // Characters are stored as hex representation
     private char[] hexChars = [
-        0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
-        0x20, 0x60, 0x20, 0x20, 0x70, // 1
-        0xF0, 0x10, 0xF0, 0x80, 0xF0, // 2
-        0xF0, 0x10, 0xF0, 0x10, 0xF0, // 3
-        0x90, 0x90, 0xF0, 0x10, 0x10, // 4
-        0xF0, 0x80, 0xF0, 0x10, 0xF0, // 5
-        0xF0, 0x80, 0xF0, 0x90, 0xF0, // 6
-        0xF0, 0x10, 0x20, 0x40, 0x40, // 7
-        0xF0, 0x90, 0xF0, 0x90, 0xF0, // 8
-        0xF0, 0x90, 0xF0, 0x10, 0xF0, // 9
-        0xF0, 0x90, 0xF0, 0x90, 0x90, // A
-        0xE0, 0x90, 0xE0, 0x90, 0xE0, // B
-        0xF0, 0x80, 0x80, 0x80, 0xF0, // C
-        0xE0, 0x90, 0x90, 0x90, 0xE0, // D
-        0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
-        0xF0, 0x80, 0xF0, 0x80, 0x80 // F
+        0xF0, 0x90, 0x90, 0x90, 0xF0,   // 0
+        0x20, 0x60, 0x20, 0x20, 0x70,   // 1
+        0xF0, 0x10, 0xF0, 0x80, 0xF0,   // 2
+        0xF0, 0x10, 0xF0, 0x10, 0xF0,   // 3
+        0x90, 0x90, 0xF0, 0x10, 0x10,   // 4
+        0xF0, 0x80, 0xF0, 0x10, 0xF0,   // 5
+        0xF0, 0x80, 0xF0, 0x90, 0xF0,   // 6
+        0xF0, 0x10, 0x20, 0x40, 0x40,   // 7
+        0xF0, 0x90, 0xF0, 0x90, 0xF0,   // 8
+        0xF0, 0x90, 0xF0, 0x10, 0xF0,   // 9
+        0xF0, 0x90, 0xF0, 0x90, 0x90,   // A
+        0xE0, 0x90, 0xE0, 0x90, 0xE0,   // B
+        0xF0, 0x80, 0x80, 0x80, 0xF0,   // C
+        0xE0, 0x90, 0x90, 0x90, 0xE0,   // D
+        0xF0, 0x80, 0xF0, 0x80, 0xF0,   // E
+        0xF0, 0x80, 0xF0, 0x80, 0x80    // F
     ];
 
     // METHODS
@@ -79,17 +79,22 @@ class Chip8 {
 
         // Loading the program into memory
         // Useable memory begins at 0x200 (512)
-        File ROM = File("MISSILE", "r");
+        try {
+        File ROM = File("brix", "r");
         char[] buffer = ROM.rawRead(new char[ROM.size()]);
         ROM.close();
         const bufferSize = buffer.length;
         for(int i = 0; i < bufferSize; i++) {
             memory[i + 512] = buffer[i];
         }
+        } catch(Error e) {
+            writefln("Could find file to read...");
+            CloseWindow();
+        }
 
         // Init the GFX
         InitWindow(64 * 10, 32 * 10, "Chip8D by KLV");
-        SetTargetFPS(60);
+        SetTargetFPS(200);
         this.drawFlag = false;
 
         // Loading the characters into memory
@@ -98,7 +103,7 @@ class Chip8 {
           }
 
         // Just for debuging
-        writeln("\nSTACK:");
+        writeln("\nSTACK | PC | OPCODE");
     }
 
     // Main emulation loop
@@ -115,7 +120,7 @@ class Chip8 {
             // Fetch opcodes
             this.opcode = this.memory[this.pc] << 8 | this.memory[this.pc + 1];
             //writef("\rPC: %s | OPCODE: 0x%X", this.pc, this.opcode & 0xFFFF);
-            writef("\r%s", this.stack);
+            
 
             // Loops through the whole key map and checks if the pressed key matches with the position in the map. If so, the key becomes the position
             int pressedKey = GetKeyPressed();
@@ -124,6 +129,12 @@ class Chip8 {
                     this.key = i;
                 } 
             }
+            // if (IsKeyReleased(pressedKey)) {
+            //     this.key = -1;
+            // }
+
+            writef("\r%s | %s | 0x%X", this.stack, this.pc, this.opcode & 0xFFFF);
+            //writeln(pressedKey);
 
             //DrawText(cast(char*)format("0x%X", this.opcode), 25, 25, 20, Colors.RAYWHITE);
             //DrawText(cast(char*)format("%s", this.pc), 25, 45, 20, Colors.RAYWHITE);
@@ -138,14 +149,19 @@ class Chip8 {
                         case 0x0000: {
                             // TODO when implementing graphics
                             writeln("Clear screen");
+                            for (int i = 0; i < this.gfx.length; i++) {
+                                this.gfx[i] = 0;
+                            }
                             this.pc += 2;
                             break;
                         }
 
                         // 0x00EE returns from subroutine
                         case 0x00EE: {
-                            //writeln("Return");
-                            this.pc = this.stack[--this.sp];
+                            //writefln("Return: %s", this.stack[this.sp - 1]);
+                            //this.pc = this.stack[--this.sp];
+                            this.sp -= 1;
+                            this.pc = this.stack[this.sp];
                             break;
                         }
                         default: {
@@ -163,8 +179,10 @@ class Chip8 {
                 // 0x2NNN calls a subroutine at address NNN -> we need to keep track of the pc in the stack because of the return
                 case 0x2000: {
                     //writefln("Call: %s", this.opcode & 0x0FFF);
+                    //this.stack[this.sp++] = this.pc;
+                    this.pc += 2;
                     this.stack[this.sp] = this.pc;
-                    this.sp++;
+                    this.sp += 1;
                     this.pc = opcode & 0x0FFF;
                     break;
                 }
@@ -356,25 +374,23 @@ class Chip8 {
                     switch (this.opcode & 0xF0FF) {
                         // 0xEX9E skips the next instruction when the key saved in V[X] is pressed
                         case 0xE09E: {
-                            // TODO when implememting keyboard...
                             if (this.V[(this.opcode & 0x0F00) >> 8] == this.key) {
                                 this.pc += 4;
                             } else {
                                 this.pc += 2;
                             }
-                            this.key = -1;
+                            //this.key = -1;
                             break;
                         }
 
                         // 0xEXA1 skips the next instruction when the key saved in V[X] is not pressed
                         case 0xE0A1: {
-                            // TODO when implememting keyboard...
                             if (this.V[(this.opcode & 0x0F00) >> 8] == this.key) {
                                 this.pc += 2;
                             } else {
                                 this.pc += 4;
                             }
-                            this.key = -1;
+                            //this.key = -1;
                             break;
                         }
                         default: {
@@ -396,6 +412,7 @@ class Chip8 {
                         // 0xFX0A is waiting for a keypress and stores it in V[X]
                         case 0x000A: {
                             // TODO when implementing keyboard
+                            writeln("Keyboard 3");
                             this.V[(this.opcode & 0x0F00) >> 8] = cast(char)this.key;
                             this.pc += 2;
                             break;

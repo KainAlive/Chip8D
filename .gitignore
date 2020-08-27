@@ -13,3 +13,4 @@ chip8d-test-*
 *.o
 *.obj
 *.lst
+*.ch8
