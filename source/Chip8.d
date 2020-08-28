@@ -22,7 +22,11 @@ class Chip8 {
     private short pc;
 
     // Screen Pixels (2048 pixels => [64 * 32]) Pixel states are 0 and 1
-    private byte[64*32] gfx;
+    const ROWS = 32;
+    const COLUMNS = 64;
+    const GFX_MULTIPLIER = 10;
+    const FPS = 60;
+    private byte[COLUMNS * ROWS] gfx;
 
     // Interupts and hardware registers. The Chip 8 has none, but there are two timer registers that count at 60 Hz. When set above zero they will count down to zero.
     private char delayTimer;
@@ -43,9 +47,6 @@ class Chip8 {
 
     // Random number generator
     auto rnd = Random(42);
-
-    // Flag is set when something should be drawn
-    bool drawFlag;
 
     // Characters are stored as hex representation
     private char[] hexChars = [
@@ -80,7 +81,7 @@ class Chip8 {
         // Loading the program into memory
         // Useable memory begins at 0x200 (512)
         try {
-        File ROM = File("brix", "r");
+        File ROM = File("test_opcode.ch8", "r");
         char[] buffer = ROM.rawRead(new char[ROM.size()]);
         ROM.close();
         const bufferSize = buffer.length;
@@ -93,9 +94,8 @@ class Chip8 {
         }
 
         // Init the GFX
-        InitWindow(64 * 10, 32 * 10, "Chip8D by KLV");
-        SetTargetFPS(200);
-        this.drawFlag = false;
+        InitWindow(COLUMNS * GFX_MULTIPLIER, ROWS * GFX_MULTIPLIER, "Chip8D by KLV");
+        SetTargetFPS(FPS);
 
         // Loading the characters into memory
         for (int i = 0; i < hexChars.length; i++) {
@@ -113,9 +113,6 @@ class Chip8 {
         while(!WindowShouldClose()) {
             BeginDrawing();
             //ClearBackground(Colors.BLACK);
-            if (this.drawFlag) {
-                paint();
-            }
 
             // Fetch opcodes
             this.opcode = this.memory[this.pc] << 8 | this.memory[this.pc + 1];
@@ -364,7 +361,7 @@ class Chip8 {
                             }
                         }
                     }
-                    this.drawFlag = true;
+                    paint();
                     this.pc += 2;
                     break;
                                     }
@@ -511,11 +508,9 @@ class Chip8 {
             int x = (i % 64);
             int y = (i / 64);
             if (this.gfx[i] == 0) {
-                DrawRectangle(x * 10, y * 10, 10, 10, Colors.BLACK);
-                this.drawFlag = false;
+                DrawRectangle(x * GFX_MULTIPLIER, y * GFX_MULTIPLIER, GFX_MULTIPLIER, GFX_MULTIPLIER, Colors.BLACK);
             } else {
-                DrawRectangle(x * 10, y * 10, 10, 10, Colors.RAYWHITE);
-                this.drawFlag = false;
+                DrawRectangle(x * GFX_MULTIPLIER, y * GFX_MULTIPLIER, GFX_MULTIPLIER, GFX_MULTIPLIER, Colors.RAYWHITE);
             }
         }
     }
