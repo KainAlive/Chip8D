@@ -507,11 +507,7 @@ class Chip8 {
         for (int i = 0; i < this.gfx.length; i++) {
             int x = (i % 64);
             int y = (i / 64);
-            if (this.gfx[i] == 0) {
-                DrawRectangle(x * GFX_MULTIPLIER, y * GFX_MULTIPLIER, GFX_MULTIPLIER, GFX_MULTIPLIER, Colors.BLACK);
-            } else {
-                DrawRectangle(x * GFX_MULTIPLIER, y * GFX_MULTIPLIER, GFX_MULTIPLIER, GFX_MULTIPLIER, Colors.RAYWHITE);
-            }
+            DrawRectangle(x * GFX_MULTIPLIER, y * GFX_MULTIPLIER, GFX_MULTIPLIER, GFX_MULTIPLIER, this.gfx[i] == 0 ? Colors.BLACK : Colors.RAYWHITE);
         }
     }
 }
